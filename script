@@ -45,222 +45,231 @@ function highlightTextElements() {
   }
 `;
 
-  
-    let highlightStyles = document.createElement('style');
-    highlightStyles.type = 'text/css';
-    highlightStyles.className = 'qa';
-    highlightStyles.appendChild(document.createTextNode(highlightStyleStr));
-    document.getElementsByTagName("head")[0].appendChild(highlightStyles);
-  
-    const textElements = document.querySelectorAll('h1, h2, h3, p, ul, strong, a, em, ol, li');
-    textElements.forEach(element => {
-      if (!element.closest('.image-info-box')) {
-        element.dataset.content = element.tagName.toLowerCase();
-      }
-    });
-  }
+  let highlightStyles = document.createElement('style');
+  highlightStyles.type = 'text/css';
+  highlightStyles.className = 'qa';
+  highlightStyles.appendChild(document.createTextNode(highlightStyleStr));
+  document.getElementsByTagName("head")[0].appendChild(highlightStyles);
 
-  // Função para verificar se o texto dentro de um elemento <p> termina com um ponto final
-  function checkParagraphs() {
-    const elements = document.querySelectorAll('p, li');
-  
-    elements.forEach(element => {
-      // Skip if the element is an <li> inside a <ul>
-      if (element.tagName === 'LI' && element.parentElement.tagName === 'UL') {
-        return;
-      }
-  
-      const textContent = element.textContent.trim();
-  
-      // Skip if the content is a link
-      if (element.tagName === 'a') {
-        return;
-      }
-  
-      const endsWithPeriod = textContent.endsWith('.');
-      const message = endsWithPeriod ? 'Ok' : 'Sem ponto final';
-  
-      const dotStatusElement = document.createElement('div');
-      dotStatusElement.textContent = message;
-      dotStatusElement.className = 'dot-status'; // Apply styles if needed
-      element.appendChild(dotStatusElement);
-    });
-  }
-   
-  
-  // Função para exibir informações sobre todas as tags HTML presentes na página
-  function inspectAllTags() {
-    const allTags = document.querySelectorAll('*');
-    allTags.forEach(tag => {
-      const tagName = tag.tagName.toLowerCase();
-      const tagAttributes = Array.from(tag.attributes)
-        .map(attr => `${attr.name}="${attr.value}"`)
-        .join(' ');
-  
-      console.log(`${tagName} ${tagAttributes}`);
-    });
-  }
-  
-  // Função para exibir informações sobre imagens
-  function showImageInfo() {
-    const images = document.querySelectorAll('img');
-    images.forEach(image => {
-      // Verificar se a imagem está dentro do menu de navegação ou do rodapé
-      if (
-        isElementInside(image, 'nav') ||
-        isElementInside(image, 'footer')
-      ) {
-        return;
-      }
-  
-      const imgProps = {
-        imgSrc: image.src,
-        width: image.naturalWidth,
-        height: image.naturalHeight,
-        alt: image.alt,
-        title: image.title
-      };
-  
-      const imgInfoBlock = document.createElement('div');
-      imgInfoBlock.className = 'image-info-box'; // Adicionando a classe 'image-info-box' para identificar a caixa de informações das imagens
-      imgInfoBlock.style.position = 'absolute';
-      imgInfoBlock.style.bottom = '5px';
-      imgInfoBlock.style.left = '5px';
-      imgInfoBlock.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
-      imgInfoBlock.style.color = '#fff';
-      imgInfoBlock.style.padding = '5px';
-      imgInfoBlock.style.fontSize = '14px';
-  
-      // Obter o tamanho do arquivo da imagem
-      fetch(image.src)
-        .then(response => response.blob())
-        .then(blob => {
-          const imgFileSize = (blob.size / 1024).toFixed(2);
-  
-          imgInfoBlock.innerHTML = `
-            <p><strong>Title:</strong> ${imgProps.title || 'Not set'}</p>
-            <p><strong>Alt:</strong> ${imgProps.alt || 'Not set'}</p>
-            <p><strong>Size:</strong> ${imgFileSize} KB</p>
-            <p><strong>Dimensions:</strong> ${imgProps.width} x ${imgProps.height} pixels</p>
-          `;
-        })
-        .catch(error => {
-          console.log(`***ERROR: Failed to fetch image file: ${image.src}`);
-        });
-  
+  const textElements = document.querySelectorAll('h1, h2, h3, p, ul, strong, a, em, ol, li');
+  textElements.forEach(element => {
+    if (!element.closest('.image-info-box')) {
+      element.dataset.content = element.tagName.toLowerCase();
+    }
+  });
+}
+
+// Função para verificar se o texto dentro de um elemento <p> termina com um ponto final
+function checkParagraphs() {
+  const elements = document.querySelectorAll('p, li');
+
+  elements.forEach(element => {
+    // Skip if the element is an <li> inside a <ul>
+    if (element.tagName === 'LI' && element.parentElement.tagName === 'UL') {
+      return;
+    }
+
+       // Skip if the element is an <a> element
+    if (element.tagName === 'a') {
+      return;
+    }
+
+    // Skip if the element is inside the header section
+    if (element.closest('header')) {
+      return;
+    }
+
+    const textContent = element.textContent.trim();
+
+    // Skip if the content is a link or if the element has the class 'image-info-box'
+    if (element.tagName === 'a' || element.closest('.image-info-box')) {
+      return;
+    }
+
+    const endsWithPunctuation = /[.!?;:]$/.test(textContent);
+    const message = endsWithPunctuation ? 'Ok' : 'Sem Pontuação';
+
+    const dotStatusElement = document.createElement('div');
+    dotStatusElement.textContent = message;
+    dotStatusElement.className = 'dot-status'; // Apply styles if needed
+    element.appendChild(dotStatusElement);
+  });
+}
+
+// Função para exibir informações sobre todas as tags HTML presentes na página
+function inspectAllTags() {
+  const allTags = document.querySelectorAll('*');
+  allTags.forEach(tag => {
+    const tagName = tag.tagName.toLowerCase();
+    const tagAttributes = Array.from(tag.attributes)
+      .map(attr => `${attr.name}="${attr.value}"`)
+      .join(' ');
+
+    console.log(`${tagName} ${tagAttributes}`);
+  });
+}
+
+// Função para exibir informações sobre imagens
+function showImageInfo() {
+  const images = document.querySelectorAll('img');
+  images.forEach(image => {
+    // Verificar se a imagem está dentro do menu de navegação ou do rodapé
+    if (
+      isElementInside(image, 'nav') ||
+      isElementInside(image, 'footer')
+    ) {
+      return;
+    }
+
+    const imgProps = {
+      imgSrc: image.src,
+      alt: image.alt,
+      title: image.title
+    };
+
+    const imgInfoBlock = document.createElement('div');
+    imgInfoBlock.className = 'image-info-box'; // Adicionando a classe 'image-info-box' para identificar a caixa de informações das imagens
+    imgInfoBlock.style.position = 'absolute';
+    imgInfoBlock.style.bottom = '5px';
+    imgInfoBlock.style.left = '5px';
+    imgInfoBlock.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+    imgInfoBlock.style.color = '#fff';
+    imgInfoBlock.style.padding = '5px';
+    imgInfoBlock.style.fontSize = '14px';
+
+    // Function to get image dimensions after it has loaded
+    function getImageDimensions() {
+      const imgFileSize = (image.naturalWidth * image.naturalHeight) / 1024;
+
+      imgInfoBlock.innerHTML = `
+        <p><strong>Title:</strong> ${imgProps.title || 'Not set'}</p>
+        <p><strong>Alt:</strong> ${imgProps.alt || 'Not set'}</p>
+        <p><strong>Size:</strong> ${imgFileSize.toFixed(2)} KB</p>
+        <p><strong>Dimensions:</strong> ${image.naturalWidth} x ${image.naturalHeight} pixels</p>
+      `;
+
       image.parentElement.style.position = 'relative';
       image.parentElement.appendChild(imgInfoBlock);
-    });
-  }
-  
-  // Função para exibir informações sobre links
-  function showLinkInfo() {
-    const links = document.querySelectorAll('a');
-    links.forEach(link => {
-      const linkInfo = {
-        href: link.href,
-        text: link.innerText,
-        target: link.target,
-        rel: link.rel
-      };
-  
-      console.log(`
-        Link Href: ${linkInfo.href}
-        Link Text: ${linkInfo.text}
-        Target Attribute: ${linkInfo.target || "Not Set"}
-        Rel Attribute: ${linkInfo.rel || "Not Set"}
-      `);
-    });
-  }
-  
-  // Função para exibir informações sobre as meta tags da página
-  function showMetaInfo() {
-    const metaTags = document.querySelectorAll('meta');
-    metaTags.forEach(metaTag => {
-      const metaInfo = {
-        name: metaTag.getAttribute('name') || "",
-        property: metaTag.getAttribute('property') || "",
-        content: metaTag.getAttribute('content') || ""
-      };
-  
-      console.log(`
-        Meta Tag Name: ${metaInfo.name}
-        Meta Tag Property: ${metaInfo.property}
-        Meta Tag Content: ${metaInfo.content}
-      `);
-    });
-  }
-  
-  // Função auxiliar para verificar se um elemento está dentro de um seletor pai
-  function isElementInside(element, parentSelector) {
-    const parentElement = element.closest(parentSelector);
-    return parentElement !== null;
-  }
-  
-  // Função para realizar todas as ações de QA
-  function runQAInspections() {
-    highlightTextElements();
-    inspectAllTags();
-    showImageInfo();
-    showLinkInfo();
-    showMetaInfo();
-    // Chamar a função checkParagraphs() para realizar a verificação no carregamento da página
-    checkParagraphs();
-  }
-  
-  // Chamar a função runQAInspections() para executar todas as ações de QA no carregamento da página
-  runQAInspections();
-  
-   // Estilos CSS para a caixa preta
-    const styles = `
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      background-color: black;
-      color: white;
-      padding: 10px;
-      box-sizing: border-box;
-      z-index: 9999;
-      height: auto;
-      min-height: 100px; /* Tamanho mínimo da caixa */
-      margin-bottom: 50px; /* Espaçamento após a última informação */
-    `;
-    
-    // Criar a div da caixa preta
-    const caixaPreta = document.createElement('div');
-    caixaPreta.style.cssText = styles;
-    caixaPreta.id = 'black-box'; // Add the ID
-    document.body.appendChild(caixaPreta);
-    
-    // Função para obter a meta tag pelo nome ou Open Graph
-    function obterMetaTag(nome) {
-      const meta = document.querySelector(`meta[name="${nome}"], meta[property="og:${nome}"]`);
-      return meta ? meta.content : 'Meta não encontrada';
     }
-    
-    // Função para verificar se um valor está dentro de um intervalo
-    function valorDentroDoIntervalo(valor, min, max) {
-      return valor >= min && valor <= max;
-    }
-    
-    // Obter URL, meta título e meta descrição
-    const url = window.location.href;
-    const titulo = obterMetaTag('title');
-    const descricao = obterMetaTag('description');
-    
-    // Verificar boas práticas de SEO
-    const urlValida = valorDentroDoIntervalo(url.length, 1, 80) ? 'OK' : 'não cumpre as boas práticas de SEO';
-    const tituloValido = valorDentroDoIntervalo(titulo.length, 30, 70) ? 'OK' : 'não cumpre as boas práticas de SEO';
-    const descricaoValida = valorDentroDoIntervalo(descricao.length, 1, 170) ? 'OK' : 'não cumpre as boas práticas de SEO';
-    
-    // Exibir as informações na caixa preta
-    caixaPreta.innerHTML = `
-      <div class="conteudo-dinamico">
-        <p>URL: ${url} (${url.length} caracteres) (${urlValida})</p>
-        <p>Meta Título: ${titulo} (${titulo.length} caracteres) (${tituloValido})</p>
-        <p>Meta Descrição: ${descricao} (${descricao.length} caracteres) (${descricaoValida})</p>
-      </div>
-    `;
-    
-    // Chamar a função inicialmente
+
+    // Call the function to get image dimensions
+    getImageDimensions();
+  });
+}
+
+// Função para exibir informações sobre links
+function showLinkInfo() {
+  const links = document.querySelectorAll('a');
+  links.forEach(link => {
+    const linkInfo = {
+      href: link.href,
+      text: link.innerText,
+      target: link.target,
+      rel: link.rel
+    };
+
+    console.log(`
+      Link Href: ${linkInfo.href}
+      Link Text: ${linkInfo.text}
+      Target Attribute: ${linkInfo.target || "Not Set"}
+      Rel Attribute: ${linkInfo.rel || "Not Set"}
+    `);
+  });
+}
+
+// Função para exibir informações sobre as meta tags da página
+function showMetaInfo() {
+  const metaTags = document.querySelectorAll('meta');
+  metaTags.forEach(metaTag => {
+    const metaInfo = {
+      name: metaTag.getAttribute('name') || "",
+      property: metaTag.getAttribute('property') || "",
+      content: metaTag.getAttribute('content') || ""
+    };
+
+    console.log(`
+      Meta Tag Name: ${metaInfo.name}
+      Meta Tag Property: ${metaInfo.property}
+      Meta Tag Content: ${metaInfo.content}
+    `);
+  });
+}
+
+// Função auxiliar para verificar se um elemento está dentro de um seletor pai
+function isElementInside(element, parentSelector) {
+  const parentElement = element.closest(parentSelector);
+  return parentElement !== null;
+}
+
+// Função para realizar todas as ações de QA
+function runQAInspections() {
+  highlightTextElements();
+  inspectAllTags();
+  showImageInfo();
+  showLinkInfo();
+  showMetaInfo();
+  // Chamar a função checkParagraphs() para realizar a verificação no carregamento da página
+  checkParagraphs();
+}
+
+// Chamar a função runQAInspections() para executar todas as ações de QA no carregamento da página
+runQAInspections();
+
+// Estilos CSS para a caixa preta
+const styles = `
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background-color: black;
+  color: white;
+  padding: 10px;
+  box-sizing: border-box;
+  z-index: 9999;
+  height: auto;
+  min-height: 100px; /* Tamanho mínimo da caixa */
+  margin-bottom: 50px; /* Espaçamento após a última informação */
+`;
+
+// Criar a div da caixa preta
+const caixaPreta = document.createElement('div');
+caixaPreta.style.cssText = styles;
+caixaPreta.id = 'black-box'; // Add the ID
+document.body.appendChild(caixaPreta);
+
+// Função para obter a meta tag pelo nome ou Open Graph
+function obterMetaTag(nome) {
+  if (nome === 'title') {
+    // Get the full page title including the site name
+    return document.title || 'Title not found';
+  }
+
+  const meta = document.querySelector(`meta[name="${nome}"], meta[property="og:${nome}"]`);
+  return meta ? meta.content : 'Meta not found';
+}
+
+// Função para verificar se um valor está dentro de um intervalo
+function valorDentroDoIntervalo(valor, min, max) {
+  return valor >= min && valor <= max;
+}
+
+// Obter URL, meta título e meta descrição
+const url = window.location.href;
+const titulo = obterMetaTag('title');
+const descricao = obterMetaTag('description');
+
+// Verificar boas práticas de SEO
+const urlValida = valorDentroDoIntervalo(url.length, 1, 80) ? 'OK' : 'não cumpre as boas práticas de SEO';
+const tituloValido = valorDentroDoIntervalo(titulo.length, 30, 70) ? 'OK' : 'não cumpre as boas práticas de SEO';
+const descricaoValida = valorDentroDoIntervalo(descricao.length, 1, 170) ? 'OK' : 'não cumpre as boas práticas de SEO';
+
+// Exibir as informações na caixa preta
+caixaPreta.innerHTML = `
+  <div class="conteudo-dinamico">
+    <p>URL: ${url} (${url.length} caracteres) (${urlValida})</p>
+    <p>Meta Título: ${titulo} (${titulo.length} caracteres) (${tituloValido})</p>
+    <p>Meta Descrição: ${descricao} (${descricao.length} caracteres) (${descricaoValida})</p>
+  </div>
+`;
+
+// Chamar a função inicialmente
